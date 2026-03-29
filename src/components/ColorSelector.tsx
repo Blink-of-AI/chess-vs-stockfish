@@ -4,9 +4,10 @@ import type { Color } from '@/types';
 interface Props {
   onSelect: (color: Color) => void;
   stockfishReady: boolean;
+  stockfishError?: string | null;
 }
 
-export default function ColorSelector({ onSelect, stockfishReady }: Props) {
+export default function ColorSelector({ onSelect, stockfishReady, stockfishError }: Props) {
   return (
     <div
       style={{
@@ -71,26 +72,26 @@ export default function ColorSelector({ onSelect, stockfishReady }: Props) {
       </div>
 
       {!stockfishReady ? (
-        <div
-          style={{
-            color: 'var(--text-muted)',
-            fontSize: '0.85rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-          }}
-        >
-          <span
-            style={{
-              display: 'inline-block',
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: 'var(--accent)',
-              animation: 'pulse 1.5s infinite',
-            }}
-          />
-          Loading Stockfish engine…
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          {stockfishError ? (
+            <p style={{ color: '#EF4444', fontSize: '0.85rem', textAlign: 'center', maxWidth: 280 }}>
+              {stockfishError}
+            </p>
+          ) : (
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: 'var(--accent)',
+                  animation: 'pulse 1.5s infinite',
+                }}
+              />
+              Loading Stockfish engine…
+            </div>
+          )}
         </div>
       ) : (
         <div

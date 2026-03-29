@@ -2,29 +2,32 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 export function useStockfish() {
-  const workerRef = useRef<Worker | null>(null);
+  const workerRef = useRef(null);
   const [ready, setReady] = useState(false);
-  const onBestMoveRef = useRef<((move: string) => void) | null>(null);
-  const onEvalRef = useRef<((score: number) => void) | null>(null);
-  const onEvalUpdateRef = useRef<((score: number) => void) | null>(null);
-  const modeRef = useRef<'bestmove' | 'eval' | null>(null);
+  const [error, setError] = useState(null);
+  const onBestMoveRef = useRef(null);
+  const onEvalRef = useRef(null);
+  const onEvalUpdateRef = useRef(null);
+  const modeRef = useRef(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const wasmPath = encodeURIComponent('/stockfish-nnue-16-single.wasm');
-    const workerUrl = `/stockfish-nnue-16-single.js#${wasmPath},worker`;
-
-    let worker: Worker;
+    let worker;
     try {
-      worker = new Worker(workerUrl);
+      worker = new Worker('/stockfish-worker.js');
     } catch (err) {
       console.error('Failed to create Stockfish worker:', err);
+      setError('Failed to load engine');
       return;
     }
 
-    worker.onmessage = (e: MessageEvent) => {
-      const line: string = typeof e.data === 'string' ? e.data : String(e.data ?? '');
+    const timeout = setTimeout(() => {
+      setError('Engine failed to load — try refreshing');
+    }, 20000);
+
+    worker.onmessage = (e) => {
+      const line = typeof e.data === 'string' ? e.data : String(e.data ?? '');
       if (!line) return;
 
       if (line === 'uciok') {
@@ -32,6 +35,7 @@ export function useStockfish() {
         worker.postMessage('isready');
       }
       if (line === 'readyok') {
+        clearTimeout(timeout);
         setReady(true);
       }
       if (modeRef.current === 'bestmove' && line.startsWith('bestmove')) {
@@ -45,21 +49,18 @@ export function useStockfish() {
         }
       }
       if (modeRef.current === 'eval' && line.startsWith('info depth')) {
-        const cpMatch = line.match(/score cp (-?\d+)/);
-        const mateMatch = line.match(/score mate (-?\d+)/);
-        const depthMatch = line.match(/depth (\d+)/);
+        const cpMatch = line.match(/score cp (-?d+)/);
+        const mateMatch = line.match(/score mate (-?d+)/);
+        const depthMatch = line.match(/depth (d+)/);
         if (depthMatch) {
           const depth = parseInt(depthMatch[1], 10);
-          let score: number | null = null;
+          let score = null;
           if (cpMatch) score = parseInt(cpMatch[1], 10);
           else if (mateMatch) score = parseInt(mateMatch[1], 10) > 0 ? 10000 : -10000;
 
-          // Stream updates from depth 6 onward
           if (depth >= 6 && score !== null) {
             onEvalUpdateRef.current?.(score);
           }
-
-          // Final result at depth 12
           if (depth >= 12 && score !== null) {
             worker.postMessage('stop');
             const cb = onEvalRef.current;
@@ -72,44 +73,36 @@ export function useStockfish() {
       }
     };
 
-    worker.onerror = (e) => {
-      console.error('Stockfish worker error:', e);
-    };
-
+    worker.onerror = (e) => { console.error('Stockfish worker error:', e); };
     worker.postMessage('uci');
     workerRef.current = worker;
 
     return () => {
+      clearTimeout(timeout);
       worker.terminate();
       workerRef.current = null;
       setReady(false);
     };
   }, []);
 
-  const getBestMove = useCallback(
-    (fen: string, cb: (move: string) => void, movetime = 1500) => {
-      const w = workerRef.current;
-      if (!w || !ready) return;
-      modeRef.current = 'bestmove';
-      onBestMoveRef.current = cb;
-      w.postMessage(`position fen ${fen}`);
-      w.postMessage(`go movetime ${movetime}`);
-    },
-    [ready]
-  );
+  const getBestMove = useCallback((fen, cb, movetime = 1500) => {
+    const w = workerRef.current;
+    if (!w || !ready) return;
+    modeRef.current = 'bestmove';
+    onBestMoveRef.current = cb;
+    w.postMessage('position fen ' + fen);
+    w.postMessage('go movetime ' + movetime);
+  }, [ready]);
 
-  const evaluatePosition = useCallback(
-    (fen: string, cb: (score: number) => void, onUpdate?: (score: number) => void) => {
-      const w = workerRef.current;
-      if (!w || !ready) return;
-      modeRef.current = 'eval';
-      onEvalRef.current = cb;
-      onEvalUpdateRef.current = onUpdate ?? null;
-      w.postMessage(`position fen ${fen}`);
-      w.postMessage('go depth 12');
-    },
-    [ready]
-  );
+  const evaluatePosition = useCallback((fen, cb, onUpdate) => {
+    const w = workerRef.current;
+    if (!w || !ready) return;
+    modeRef.current = 'eval';
+    onEvalRef.current = cb;
+    onEvalUpdateRef.current = onUpdate ?? null;
+    w.postMessage('position fen ' + fen);
+    w.postMessage('go depth 12');
+  }, [ready]);
 
-  return { ready, getBestMove, evaluatePosition };
+  return { ready, error, getBestMove, evaluatePosition };
 }
