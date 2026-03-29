@@ -74,18 +74,18 @@ export default function Controls({ phase, drawOfferState, onResign, onOfferDraw,
           style={{
             ...btnBase,
             background: 'var(--accent)',
-            color: '#1A1208',
+            color: '#ffffff',
             padding: '10px 28px',
             fontWeight: 700,
-            boxShadow: '0 2px 8px rgba(200,169,81,0.3)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
           }}
           onMouseEnter={e => {
             e.currentTarget.style.transform = 'translateY(-1px)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(200,169,81,0.4)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
           }}
           onMouseLeave={e => {
             e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 2px 8px rgba(200,169,81,0.3)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
           }}
         >
           New Game

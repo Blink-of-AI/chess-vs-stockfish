@@ -5,17 +5,17 @@
 :root {
   --board-light: #f0d9b5;
   --board-dark: #b58863;
-  --board-frame: #4a1f08;
-  --bg: #0C0C0C;
-  --surface: #1A1A1A;
-  --surface-2: #242424;
-  --text: #E8D5B7;
-  --text-muted: #8B7355;
-  --accent: #C8A951;
-  --accent-dim: #6B4F1A;
+  --board-frame: #7c4a1e;
+  --bg: #edede8;
+  --surface: #ffffff;
+  --surface-2: #e0ddd8;
+  --text: #2d2d2d;
+  --text-muted: #766e65;
+  --accent: #b58863;
+  --accent-dim: #d4a87a;
   --highlight-select: rgba(20, 85, 30, 0.5);
   --highlight-move: rgba(20, 85, 30, 0.3);
-  --highlight-last: rgba(200, 169, 81, 0.35);
+  --highlight-last: rgba(155, 199, 0, 0.41);
   --highlight-check: rgba(220, 40, 40, 0.45);
   --dot-color: rgba(0, 0, 0, 0.25);
   --dot-capture: rgba(0, 0, 0, 0.2);
