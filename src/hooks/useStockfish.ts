@@ -2,18 +2,18 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 export function useStockfish() {
-  const workerRef = useRef(null);
-  const [ready, setReady] = useState(false);
-  const [error, setError] = useState(null);
-  const onBestMoveRef = useRef(null);
-  const onEvalRef = useRef(null);
-  const onEvalUpdateRef = useRef(null);
-  const modeRef = useRef(null);
+  const workerRef = useRef<Worker | null>(null);
+  const [ready, setReady] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const onBestMoveRef = useRef<((move: string) => void) | null>(null);
+  const onEvalRef = useRef<((score: number) => void) | null>(null);
+  const onEvalUpdateRef = useRef<((score: number) => void) | null>(null);
+  const modeRef = useRef<'bestmove' | 'eval' | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    let worker;
+    let worker: Worker;
     try {
       worker = new Worker('/stockfish-worker.js');
     } catch (err) {
@@ -54,7 +54,7 @@ export function useStockfish() {
         const depthMatch = line.match(/depth (d+)/);
         if (depthMatch) {
           const depth = parseInt(depthMatch[1], 10);
-          let score = null;
+          let score: number | null = null;
           if (cpMatch) score = parseInt(cpMatch[1], 10);
           else if (mateMatch) score = parseInt(mateMatch[1], 10) > 0 ? 10000 : -10000;
 
@@ -85,7 +85,7 @@ export function useStockfish() {
     };
   }, []);
 
-  const getBestMove = useCallback((fen, cb, movetime = 1500) => {
+  const getBestMove = useCallback((fen: string, cb: (move: string) => void, movetime = 1500) => {
     const w = workerRef.current;
     if (!w || !ready) return;
     modeRef.current = 'bestmove';
@@ -94,7 +94,7 @@ export function useStockfish() {
     w.postMessage('go movetime ' + movetime);
   }, [ready]);
 
-  const evaluatePosition = useCallback((fen, cb, onUpdate) => {
+  const evaluatePosition = useCallback((fen: string, cb: (score: number) => void, onUpdate?: (score: number) => void) => {
     const w = workerRef.current;
     if (!w || !ready) return;
     modeRef.current = 'eval';

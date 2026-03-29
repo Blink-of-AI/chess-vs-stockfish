@@ -17,12 +17,12 @@ export default function Home() {
   const game = useChessGame();
   const { ready, error: stockfishError, getBestMove, evaluatePosition } = useStockfish();
   const { state } = game;
-  const savedGameRef = useRef(null);
-  const [evalScore, setEvalScore] = useState(null);
+  const savedGameRef = useRef<string | null>(null);
+  const [evalScore, setEvalScore] = useState<number | null>(null);
 
   useEffect(() => {
     if (state.phase !== 'thinking' || !ready || !state.playerColor) return;
-    getBestMove(state.fen, (move) => { game.makeComputerMove(move); }, 1500);
+    getBestMove(state.fen, (move: string) => { game.makeComputerMove(move); }, 1500);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, state.fen, ready]);
 
@@ -59,7 +59,7 @@ export default function Home() {
     if (game.canClaimDraw()) { game.acceptDraw(); return; }
     game.setDrawOfferPending();
     evaluatePosition(state.fen, (score) => {
-      const computerColor = state.playerColor === 'w' ? 'b' : 'w';
+      const computerColor: Color = state.playerColor === 'w' ? 'b' : 'w';
       const scoreForComputer = computerColor === 'w' ? score : -score;
       if (scoreForComputer <= 100) { game.acceptDraw(); } else { game.declineDraw(); }
     });
@@ -73,7 +73,7 @@ export default function Home() {
   const flipped = state.playerColor === 'b';
   const capturedByPlayer = state.playerColor === 'w' ? state.capturedByWhite : state.capturedByBlack;
   const capturedByOpponent = state.playerColor === 'w' ? state.capturedByBlack : state.capturedByWhite;
-  const opponentColor = state.playerColor === 'w' ? 'b' : 'w';
+  const opponentColor: Color = state.playerColor === 'w' ? 'b' : 'w';
   const playerColorSafe = state.playerColor ?? 'w';
 
   return (
