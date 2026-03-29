@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --board-light: #e8c97a;
-  --board-dark: #9a6b38;
-  --board-frame: #3d1f0d;
+  --board-light: #f0d9b5;
+  --board-dark: #b58863;
+  --board-frame: #4a1f08;
   --bg: #0C0C0C;
   --surface: #1A1A1A;
   --surface-2: #242424;

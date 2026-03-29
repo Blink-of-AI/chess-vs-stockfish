@@ -57,10 +57,10 @@ export default function Board({
     <div
       className="relative select-none"
       style={{
-        border: '20px solid #3d1f0d',
-        background: 'linear-gradient(135deg, #5c2d0a 0%, #3d1f0d 40%, #2d1508 100%)',
-        boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.5), 0 8px 40px rgba(0,0,0,0.8)',
-        borderRadius: 4,
+        padding: '30px',
+        background: 'linear-gradient(145deg, #6b3510 0%, #4a1f08 30%, #3a1806 60%, #5a2c0e 100%)',
+        boxShadow: 'inset 0 0 20px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,180,80,0.08), 0 10px 50px rgba(0,0,0,0.9)',
+        borderRadius: 6,
       }}
     >
       <div
@@ -86,9 +86,7 @@ export default function Board({
             const isDragOver = dragOver === sq;
             const isDraggable = interactive && !!piece && piece.color === playerColor;
 
-            const bg = isLight
-              ? 'radial-gradient(circle at 30% 30%, #f5dfa0 0%, #e8c97a 40%, #d4b060 100%)'
-              : 'radial-gradient(circle at 30% 30%, #b8834a 0%, #9a6b38 40%, #7a5028 100%)';
+            const bg = isLight ? '#f0d9b5' : '#b58863';
 
             return (
               <div
