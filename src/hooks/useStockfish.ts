@@ -7,12 +7,11 @@ export function useStockfish() {
   const onBestMoveRef = useRef<((move: string) => void) | null>(null);
   const onEvalRef = useRef<((score: number) => void) | null>(null);
   const modeRef = useRef<'bestmove' | 'eval' | null>(null);
+  const evalDepthRef = useRef<number>(10);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // The stockfish-nnue-16-single.js supports worker mode via the hash:
-    // #<wasm-path>,worker — the hash tells it where to find the .wasm and to run as a UCI worker.
     const wasmPath = encodeURIComponent('/stockfish-nnue-16-single.wasm');
     const workerUrl = `/stockfish-nnue-16-single.js#${wasmPath},worker`;
 
@@ -49,7 +48,7 @@ export function useStockfish() {
         const cpMatch = line.match(/score cp (-?\d+)/);
         const mateMatch = line.match(/score mate (-?\d+)/);
         const depthMatch = line.match(/depth (\d+)/);
-        if (depthMatch && parseInt(depthMatch[1], 10) >= 10) {
+        if (depthMatch && parseInt(depthMatch[1], 10) >= evalDepthRef.current) {
           let score: number | null = null;
           if (cpMatch) score = parseInt(cpMatch[1], 10);
           else if (mateMatch) score = parseInt(mateMatch[1], 10) > 0 ? 10000 : -10000;
@@ -91,16 +90,79 @@ export function useStockfish() {
   );
 
   const evaluatePosition = useCallback(
-    (fen: string, cb: (score: number) => void) => {
+    (fen: string, cb: (score: number) => void, depth = 12) => {
       const w = workerRef.current;
       if (!w || !ready) return;
+      evalDepthRef.current = depth;
       modeRef.current = 'eval';
       onEvalRef.current = cb;
       w.postMessage(`position fen ${fen}`);
-      w.postMessage('go depth 12');
+      w.postMessage(`go depth ${depth}`);
     },
     [ready]
   );
 
-  return { ready, getBestMove, evaluatePosition };
+  /**
+   * Analyse a sequence of {before, after} FEN pairs (player moves only).
+   * Evaluates each position before and after the move at the given depth,
+   * then calls onComplete with the computed ACPL (average centipawn loss).
+   * onProgress fires after each move with how many are done so far.
+   */
+  const analyzePlayerMoves = useCallback(
+    (
+      moves: Array<{ before: string; after: string }>,
+      onComplete: (acpl: number) => void,
+      onProgress?: (done: number, total: number) => void,
+      depth = 6,
+    ) => {
+      if (!workerRef.current || !ready || moves.length === 0) {
+        onComplete(0);
+        return;
+      }
+
+      const losses: number[] = [];
+      let moveIdx = 0;
+      let scoreBefore = 0;
+      let evalPhase: 'before' | 'after' = 'before';
+
+      const runNext = () => {
+        if (moveIdx >= moves.length) {
+          const acpl =
+            losses.length > 0
+              ? losses.reduce((a, b) => a + b, 0) / losses.length
+              : 0;
+          onComplete(Math.round(acpl));
+          return;
+        }
+
+        const fen =
+          evalPhase === 'before'
+            ? moves[moveIdx].before
+            : moves[moveIdx].after;
+
+        evaluatePosition(fen, (score) => {
+          if (evalPhase === 'before') {
+            scoreBefore = score;
+            evalPhase = 'after';
+            runNext();
+          } else {
+            // score is from the opponent's perspective (their turn after player moved)
+            const scoreForPlayer = -score;
+            const cpl = Math.max(0, scoreBefore - scoreForPlayer);
+            // Cap individual move loss at 500cp so single blunders don't dominate
+            losses.push(Math.min(500, cpl));
+            evalPhase = 'before';
+            moveIdx++;
+            onProgress?.(moveIdx, moves.length);
+            runNext();
+          }
+        }, depth);
+      };
+
+      runNext();
+    },
+    [ready, evaluatePosition],
+  );
+
+  return { ready, getBestMove, evaluatePosition, analyzePlayerMoves };
 }

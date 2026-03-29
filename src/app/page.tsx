@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { useChessGame } from '@/hooks/useChessGame';
 import { useStockfish } from '@/hooks/useStockfish';
 import Board from '@/components/Board';
@@ -9,12 +9,17 @@ import MoveHistory from '@/components/MoveHistory';
 import PromotionModal from '@/components/PromotionModal';
 import StatusBar from '@/components/StatusBar';
 import CapturedPieces from '@/components/CapturedPieces';
+import EloResult from '@/components/EloResult';
 import type { Color } from '@/types';
 
 export default function Home() {
   const game = useChessGame();
-  const { ready, getBestMove, evaluatePosition } = useStockfish();
+  const { ready, getBestMove, evaluatePosition, analyzePlayerMoves } = useStockfish();
   const { state } = game;
+
+  const [acpl, setAcpl] = useState<number | null>(null);
+  const [analysisProgress, setAnalysisProgress] = useState<{ done: number; total: number } | null>(null);
+  const analysedFenRef = useRef<string | null>(null);
 
   // Trigger computer move when it's the engine's turn
   useEffect(() => {
@@ -24,6 +29,45 @@ export default function Home() {
     }, 1500);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, state.fen, ready]);
+
+  // Analyse the game and estimate ELO when it ends
+  useEffect(() => {
+    if (state.phase !== 'game-over' || !ready || !state.playerColor) return;
+    if (analysedFenRef.current === state.fen) return; // already ran for this game
+    analysedFenRef.current = state.fen;
+
+    const playerColor = state.playerColor;
+    const playerMoves = state.history
+      .filter(m => m.color === playerColor)
+      .map(m => ({ before: m.before, after: m.after }));
+
+    if (playerMoves.length === 0) {
+      setAcpl(0);
+      return;
+    }
+
+    setAcpl(null);
+    setAnalysisProgress({ done: 0, total: playerMoves.length });
+
+    analyzePlayerMoves(
+      playerMoves,
+      (result) => {
+        setAcpl(result);
+        setAnalysisProgress(null);
+      },
+      (done, total) => setAnalysisProgress({ done, total }),
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.phase, ready]);
+
+  // Reset analysis state on new game
+  useEffect(() => {
+    if (state.phase === 'color-selection') {
+      setAcpl(null);
+      setAnalysisProgress(null);
+      analysedFenRef.current = null;
+    }
+  }, [state.phase]);
 
   const handleDrawOffer = useCallback(() => {
     if (game.canClaimDraw()) {
@@ -55,6 +99,8 @@ export default function Home() {
   const capturedByOpponent = state.playerColor === 'w' ? state.capturedByBlack : state.capturedByWhite;
   const opponentColor: Color = state.playerColor === 'w' ? 'b' : 'w';
   const playerColorSafe = state.playerColor ?? 'w';
+
+  const showEloPanel = state.phase === 'game-over' && (analysisProgress !== null || acpl !== null);
 
   return (
     <div
@@ -154,6 +200,9 @@ export default function Home() {
         {/* Side panel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minWidth: 0 }}>
           <MoveHistory history={state.history} playerColor={playerColorSafe} />
+          {showEloPanel && (
+            <EloResult acpl={acpl} analysisProgress={analysisProgress} />
+          )}
         </div>
       </div>
 
