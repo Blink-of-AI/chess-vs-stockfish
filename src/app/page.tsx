@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useChessGame } from '@/hooks/useChessGame';
 import { useStockfish } from '@/hooks/useStockfish';
 import Board from '@/components/Board';
@@ -9,12 +9,14 @@ import MoveHistory from '@/components/MoveHistory';
 import PromotionModal from '@/components/PromotionModal';
 import StatusBar from '@/components/StatusBar';
 import CapturedPieces from '@/components/CapturedPieces';
+import GameHistory from '@/components/GameHistory';
 import type { Color } from '@/types';
 
 export default function Home() {
   const game = useChessGame();
   const { ready, getBestMove, evaluatePosition } = useStockfish();
   const { state } = game;
+  const savedGameRef = useRef<string | null>(null);
 
   // Trigger computer move when it's the engine's turn
   useEffect(() => {
@@ -24,6 +26,29 @@ export default function Home() {
     }, 1500);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, state.fen, ready]);
+
+  // Save completed game to NeonDB
+  useEffect(() => {
+    if (state.phase !== 'game-over' || !state.result || !state.playerColor) return;
+    const gameKey = `${state.fen}-${state.result.reason}`;
+    if (savedGameRef.current === gameKey) return;
+    savedGameRef.current = gameKey;
+
+    fetch('/api/games', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        playerColor: state.playerColor,
+        result: state.result.winner,
+        endReason: state.result.reason,
+        moves: state.history.map(m => m.san).join(' '),
+        moveCount: state.history.length,
+      }),
+    }).catch(() => {
+      // Non-critical — silently ignore save failures
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.phase]);
 
   const handleDrawOffer = useCallback(() => {
     if (game.canClaimDraw()) {
@@ -154,6 +179,7 @@ export default function Home() {
         {/* Side panel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minWidth: 0 }}>
           <MoveHistory history={state.history} playerColor={playerColorSafe} />
+          <GameHistory />
         </div>
       </div>
 
