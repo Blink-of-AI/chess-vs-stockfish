@@ -8,21 +8,25 @@ export function useStockfish() {
   const onEvalRef = useRef<((score: number) => void) | null>(null);
   const modeRef = useRef<'bestmove' | 'eval' | null>(null);
 
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // The stockfish-nnue-16-single.js supports worker mode via the hash:
-    // #<wasm-path>,worker — the hash tells it where to find the .wasm and to run as a UCI worker.
-    const wasmPath = encodeURIComponent('/stockfish-nnue-16-single.wasm');
-    const workerUrl = `/stockfish-nnue-16-single.js#${wasmPath},worker`;
-
     let worker: Worker;
     try {
-      worker = new Worker(workerUrl);
+      // Load via a shim so importScripts resolves paths relative to /
+      worker = new Worker('/stockfish-worker.js');
     } catch (err) {
       console.error('Failed to create Stockfish worker:', err);
+      setError('Failed to load engine');
       return;
     }
+
+    // Timeout: if not ready in 20s, surface an error
+    const timeout = setTimeout(() => {
+      setError('Engine failed to load — try refreshing');
+    }, 20000);
 
     worker.onmessage = (e: MessageEvent) => {
       const line: string = typeof e.data === 'string' ? e.data : String(e.data ?? '');
@@ -33,6 +37,7 @@ export function useStockfish() {
         worker.postMessage('isready');
       }
       if (line === 'readyok') {
+        clearTimeout(timeout);
         setReady(true);
       }
       if (modeRef.current === 'bestmove' && line.startsWith('bestmove')) {
@@ -72,6 +77,7 @@ export function useStockfish() {
     workerRef.current = worker;
 
     return () => {
+      clearTimeout(timeout);
       worker.terminate();
       workerRef.current = null;
       setReady(false);
@@ -102,5 +108,5 @@ export function useStockfish() {
     [ready]
   );
 
-  return { ready, getBestMove, evaluatePosition };
+  return { ready, error, getBestMove, evaluatePosition };
 }

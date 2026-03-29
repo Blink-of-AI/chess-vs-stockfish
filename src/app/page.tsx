@@ -13,7 +13,7 @@ import type { Color } from '@/types';
 
 export default function Home() {
   const game = useChessGame();
-  const { ready, getBestMove, evaluatePosition } = useStockfish();
+  const { ready, error: stockfishError, getBestMove, evaluatePosition } = useStockfish();
   const { state } = game;
 
   // Trigger computer move when it's the engine's turn
@@ -44,7 +44,7 @@ export default function Home() {
   }, [state.fen, state.playerColor, game, evaluatePosition]);
 
   if (state.phase === 'color-selection') {
-    return <ColorSelector onSelect={game.startGame} stockfishReady={ready} />;
+    return <ColorSelector onSelect={game.startGame} stockfishReady={ready} stockfishError={stockfishError} />;
   }
 
   const isPlayerTurn = state.phase === 'playing' && state.turn === state.playerColor;
