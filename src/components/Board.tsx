@@ -57,10 +57,10 @@ export default function Board({
     <div
       className="relative select-none"
       style={{
-        padding: '30px',
-        background: 'linear-gradient(145deg, #6b3510 0%, #4a1f08 30%, #3a1806 60%, #5a2c0e 100%)',
-        boxShadow: 'inset 0 0 20px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,180,80,0.08), 0 10px 50px rgba(0,0,0,0.9)',
-        borderRadius: 6,
+        padding: '28px',
+        background: 'linear-gradient(145deg, #a0622a 0%, #7c4a1e 35%, #6a3c18 65%, #8c5424 100%)',
+        boxShadow: 'inset 0 0 12px rgba(0,0,0,0.35), inset 0 2px 3px rgba(255,200,120,0.12), 0 6px 32px rgba(0,0,0,0.35)',
+        borderRadius: 4,
       }}
     >
       <div

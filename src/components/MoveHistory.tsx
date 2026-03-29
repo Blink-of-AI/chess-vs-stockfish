@@ -80,7 +80,7 @@ export default function MoveHistory({ history, playerColor }: Props) {
                   fontWeight: isWhiteLast ? 700 : 400,
                   padding: '2px 4px',
                   borderRadius: 2,
-                  background: isWhiteLast ? 'rgba(200,169,81,0.1)' : 'transparent',
+                  background: isWhiteLast ? 'rgba(181,136,99,0.2)' : 'transparent',
                   transition: 'background 0.2s',
                 }}
               >
@@ -93,7 +93,7 @@ export default function MoveHistory({ history, playerColor }: Props) {
                   fontWeight: isBlackLast ? 700 : 400,
                   padding: '2px 4px',
                   borderRadius: 2,
-                  background: isBlackLast ? 'rgba(200,169,81,0.1)' : 'transparent',
+                  background: isBlackLast ? 'rgba(181,136,99,0.2)' : 'transparent',
                   transition: 'background 0.2s',
                 }}
               >

@@ -25,7 +25,7 @@ export default function ColorSelector({ onSelect, stockfishReady, stockfishError
           style={{
             fontSize: 'clamp(2rem, 5vw, 3rem)',
             fontWeight: 800,
-            color: 'var(--accent)',
+            color: 'var(--text)',
             letterSpacing: '-0.03em',
             marginBottom: 8,
             lineHeight: 1,
@@ -120,26 +120,26 @@ export default function ColorSelector({ onSelect, stockfishReady, stockfishError
               style={{
                 padding: '14px 28px',
                 background: 'var(--board-light)',
-                color: '#1A1208',
-                border: 'none',
+                color: '#3a2a10',
+                border: '1px solid #c8a87a',
                 borderRadius: 4,
                 fontSize: '1rem',
                 fontWeight: 700,
                 cursor: 'pointer',
                 letterSpacing: '0.03em',
                 transition: 'transform 0.1s, box-shadow 0.1s',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
               }}
               onMouseEnter={e => {
                 e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.6)';
+                e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.25)';
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.5)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.18)';
               }}
             >
               <span style={{ fontSize: '1.3rem' }}>♔</span>
@@ -151,27 +151,27 @@ export default function ColorSelector({ onSelect, stockfishReady, stockfishError
               onClick={() => onSelect('b')}
               style={{
                 padding: '14px 28px',
-                background: '#1A1208',
-                color: 'var(--board-light)',
-                border: '2px solid var(--board-dark)',
+                background: 'var(--board-dark)',
+                color: '#f0d9b5',
+                border: '1px solid #8c6030',
                 borderRadius: 4,
                 fontSize: '1rem',
                 fontWeight: 700,
                 cursor: 'pointer',
                 letterSpacing: '0.03em',
                 transition: 'transform 0.1s, box-shadow 0.1s',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
               }}
               onMouseEnter={e => {
                 e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.6)';
+                e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.35)';
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.5)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.25)';
               }}
             >
               <span style={{ fontSize: '1.3rem' }}>♚</span>
