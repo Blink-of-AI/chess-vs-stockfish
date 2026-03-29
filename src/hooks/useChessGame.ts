@@ -215,6 +215,45 @@ export function useChessGame() {
     setState(prev => ({ ...prev, drawOfferState: 'pending' }));
   }, []);
 
+  /** Direct from→to move for drag & drop. Handles promotion detection. */
+  const movePiece = useCallback((from: Square, to: Square) => {
+    setState(prev => {
+      if (prev.phase !== 'playing') return prev;
+      if (prev.turn !== prev.playerColor) return prev;
+
+      const piece = chess.get(from);
+      if (!piece || piece.color !== prev.playerColor) return prev;
+
+      const moves = chess.moves({ square: from, verbose: true });
+      const targetMove = moves.find(m => m.to === to);
+      if (!targetMove) return { ...prev, selectedSquare: null, legalMoves: [] };
+
+      if (targetMove.flags.includes('p')) {
+        return { ...prev, selectedSquare: from, legalMoves: moves.map(m => m.to as Square), promotionPending: { from, to }, phase: 'promotion' };
+      }
+
+      const result = chess.move({ from, to });
+      if (!result) return { ...prev, selectedSquare: null, legalMoves: [] };
+
+      const gameResult = checkGameStatus(chess);
+      const { byWhite, byBlack } = getCaptured(chess);
+      return {
+        ...prev,
+        fen: chess.fen(),
+        turn: chess.turn() as Color,
+        phase: gameResult ? 'game-over' : 'thinking',
+        selectedSquare: null,
+        legalMoves: [],
+        lastMove: { from, to },
+        result: gameResult,
+        inCheck: chess.inCheck(),
+        history: chess.history({ verbose: true }),
+        capturedByWhite: byWhite,
+        capturedByBlack: byBlack,
+      };
+    });
+  }, [chess]);
+
   const newGame = useCallback(() => {
     chess.reset();
     setState(makeInitialState(chess));
@@ -224,6 +263,7 @@ export function useChessGame() {
     state,
     startGame,
     selectSquare,
+    movePiece,
     completePromotion,
     makeComputerMove,
     resign,

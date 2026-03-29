@@ -124,6 +124,7 @@ export default function Home() {
             flipped={flipped}
             interactive={isPlayerTurn}
             onSquareClick={game.selectSquare}
+            onMovePiece={game.movePiece}
           />
 
           {/* Player info */}
