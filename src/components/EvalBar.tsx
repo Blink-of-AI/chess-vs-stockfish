@@ -14,18 +14,12 @@ function scoreToPercent(score: number): number {
   return 50 + (50 * clamped) / (Math.abs(clamped) + 300);
 }
 
-function formatScore(score: number): string {
-  if (score >= 10000) return 'M';   // White mates
-  if (score <= -10000) return 'M';  // Black mates
-  const pawns = score / 100;
-  const sign = pawns >= 0 ? '+' : '';
-  return `${sign}${pawns.toFixed(1)}`;
-}
-
-function mateIn(score: number): number | null {
-  if (score >= 10000) return score - 10000 || null;
-  if (score <= -10000) return score + 10000 || null;
-  return null;
+function formatValue(score: number): string {
+  if (Math.abs(score) >= 10000) {
+    const moves = Math.abs(Math.abs(score) - 10000);
+    return moves > 0 ? `M${moves}` : 'M';
+  }
+  return (Math.abs(score) / 100).toFixed(1);
 }
 
 export default function EvalBar({ score, flipped }: EvalBarProps) {
@@ -39,17 +33,17 @@ export default function EvalBar({ score, flipped }: EvalBarProps) {
   const topColor = flipped ? '#F0D9B5' : '#1a1a1a';
   const bottomColor = flipped ? '#1a1a1a' : '#F0D9B5';
 
-  const label = score === null
-    ? ''
-    : mateIn(score) !== null
-      ? `M${Math.abs(mateIn(score)!)}`
-      : formatScore(score);
+  // Determine which side is winning and by how much
+  const whiteWinning = (score ?? 0) > 0;
+  const equal = score === null || score === 0;
+  const value = score === null ? null : formatValue(score);
 
-  // Position label: always inside the larger segment, near the dividing line
-  const whiteOnTop = flipped;
-  const whiteBigger = whitePercent >= 50;
-  // Label goes near the split, in whichever segment is bigger
-  const labelInTop = whiteOnTop ? whiteBigger : !whiteBigger;
+  // Top segment is winning when: flipped+whiteWinning OR !flipped+!whiteWinning
+  const topIsWinning = flipped ? whiteWinning : !whiteWinning;
+
+  // Only show a label if the segment is tall enough to fit it
+  const TOP_MIN = 12;
+  const BOT_MIN = 12;
 
   return (
     <div
@@ -76,7 +70,7 @@ export default function EvalBar({ score, flipped }: EvalBarProps) {
           minHeight: 0,
         }}
       >
-        {labelInTop && label && (
+        {value !== null && topPercent >= TOP_MIN && (
           <span
             style={{
               position: 'absolute',
@@ -90,7 +84,7 @@ export default function EvalBar({ score, flipped }: EvalBarProps) {
               letterSpacing: '-0.02em',
             }}
           >
-            {label}
+            {equal ? '=' : topIsWinning ? `+${value}` : `-${value}`}
           </span>
         )}
       </div>
@@ -105,7 +99,7 @@ export default function EvalBar({ score, flipped }: EvalBarProps) {
           minHeight: 0,
         }}
       >
-        {!labelInTop && label && (
+        {value !== null && bottomPercent >= BOT_MIN && (
           <span
             style={{
               position: 'absolute',
@@ -119,7 +113,7 @@ export default function EvalBar({ score, flipped }: EvalBarProps) {
               letterSpacing: '-0.02em',
             }}
           >
-            {label}
+            {equal ? '=' : topIsWinning ? `-${value}` : `+${value}`}
           </span>
         )}
       </div>
