@@ -4,7 +4,7 @@ import { getDb, initSchema } from '@/lib/db';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { playerColor, result, endReason, moves, moveCount } = body;
+    const { playerColor, result, endReason, moves, moveCount, username } = body;
 
     if (!playerColor || !result || !endReason || !moves || moveCount === undefined) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -14,8 +14,8 @@ export async function POST(req: NextRequest) {
     const sql = getDb();
 
     const rows = await sql`
-      INSERT INTO games (player_color, result, end_reason, moves, move_count)
-      VALUES (${playerColor}, ${result}, ${endReason}, ${moves}, ${moveCount})
+      INSERT INTO games (player_color, result, end_reason, moves, move_count, username)
+      VALUES (${playerColor}, ${result}, ${endReason}, ${moves}, ${moveCount}, ${username ?? null})
       RETURNING id, played_at
     `;
 
@@ -32,7 +32,7 @@ export async function GET() {
     const sql = getDb();
 
     const rows = await sql`
-      SELECT id, played_at, player_color, result, end_reason, move_count
+      SELECT id, played_at, player_color, result, end_reason, move_count, username
       FROM games
       ORDER BY played_at DESC
       LIMIT 20
