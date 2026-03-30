@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { Square } from 'chess.js';
 import { Chess } from 'chess.js';
 import type { Color, PieceType } from '@/types';
@@ -21,6 +21,14 @@ interface BoardProps {
   onMovePiece: (from: Square, to: Square) => void;
 }
 
+interface DragState {
+  sq: Square;
+  pieceType: PieceType;
+  pieceColor: Color;
+  x: number;
+  y: number;
+}
+
 export default function Board({
   fen,
   selectedSquare,
@@ -34,9 +42,10 @@ export default function Board({
   onMovePiece,
 }: BoardProps) {
   const chess = new Chess(fen);
+  const gridRef = useRef<HTMLDivElement>(null);
 
-  const [dragSource, setDragSource] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState<string | null>(null);
+  const [dragState, setDragState] = useState<DragState | null>(null);
+  const [dragOver, setDragOver] = useState<Square | null>(null);
 
   const files = flipped ? [...FILES].reverse() : FILES;
   const ranks = flipped ? [...RANKS].reverse() : RANKS;
@@ -53,6 +62,62 @@ export default function Board({
     }
   }
 
+  function getSquareAtPoint(clientX: number, clientY: number): Square | null {
+    const grid = gridRef.current;
+    if (!grid) return null;
+    const rect = grid.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    if (x < 0 || y < 0 || x > rect.width || y > rect.height) return null;
+    const fileIdx = Math.floor((x / rect.width) * 8);
+    const rankIdx = Math.floor((y / rect.height) * 8);
+    if (fileIdx < 0 || fileIdx > 7 || rankIdx < 0 || rankIdx > 7) return null;
+    return `${files[fileIdx]}${ranks[rankIdx]}` as Square;
+  }
+
+  function handlePointerDown(e: React.PointerEvent, sq: Square) {
+    const piece = chess.get(sq);
+    const isDraggable = interactive && !!piece && piece.color === playerColor;
+    if (!isDraggable) return;
+    e.preventDefault();
+    onSquareClick(sq);
+    setDragState({
+      sq,
+      pieceType: piece.type as PieceType,
+      pieceColor: piece.color as Color,
+      x: e.clientX,
+      y: e.clientY,
+    });
+    setDragOver(null);
+  }
+
+  function handlePointerMove(e: React.PointerEvent) {
+    if (!dragState) return;
+    setDragState(prev => prev ? { ...prev, x: e.clientX, y: e.clientY } : null);
+    const over = getSquareAtPoint(e.clientX, e.clientY);
+    setDragOver(over !== dragState.sq ? over : null);
+  }
+
+  function handlePointerUp(e: React.PointerEvent) {
+    if (!dragState) return;
+    const target = getSquareAtPoint(e.clientX, e.clientY);
+    if (target && target !== dragState.sq) {
+      onMovePiece(dragState.sq, target);
+    }
+    setDragState(null);
+    setDragOver(null);
+  }
+
+  function handlePointerLeave() {
+    if (!dragState) return;
+    setDragState(null);
+    setDragOver(null);
+  }
+
+  const squareSize = gridRef.current
+    ? gridRef.current.getBoundingClientRect().width / 8
+    : 0;
+
   return (
     <div
       className="relative select-none"
@@ -64,12 +129,17 @@ export default function Board({
       }}
     >
       <div
+        ref={gridRef}
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(8, 1fr)',
           width: 'clamp(280px, 56vmin, 560px)',
           height: 'clamp(280px, 56vmin, 560px)',
+          cursor: dragState ? 'grabbing' : 'default',
         }}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
       >
         {ranks.map((rank, ri) =>
           files.map((file, fi) => {
@@ -82,7 +152,7 @@ export default function Board({
             const isLegalMove = legalMoves.includes(sq);
             const isLastMove = lastMove && (lastMove.from === sq || lastMove.to === sq);
             const isKingInCheck = kingSquare === sq;
-            const isDragSource = dragSource === sq;
+            const isDragSource = dragState?.sq === sq;
             const isDragOver = dragOver === sq;
             const isDraggable = interactive && !!piece && piece.color === playerColor;
 
@@ -91,56 +161,15 @@ export default function Board({
             return (
               <div
                 key={sq}
-                draggable={isDraggable}
                 onClick={() => interactive && !isDragSource && onSquareClick(sq)}
-                onDragStart={(e) => {
-                  if (!isDraggable) return;
-                  e.dataTransfer.effectAllowed = 'move';
-                  // Use a transparent 1x1 pixel as the drag image so the piece
-                  // stays visible at its original position during drag.
-                  // Element must be in the DOM on macOS or the browser falls back
-                  // to a default globe/file icon as the drag ghost.
-                  const ghost = document.createElement('canvas');
-                  ghost.width = 1;
-                  ghost.height = 1;
-                  ghost.style.position = 'fixed';
-                  ghost.style.top = '-100px';
-                  document.body.appendChild(ghost);
-                  e.dataTransfer.setDragImage(ghost, 0, 0);
-                  setTimeout(() => document.body.removeChild(ghost), 0);
-                  setDragSource(sq);
-                  onSquareClick(sq); // select piece to show legal move dots
-                }}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.dataTransfer.dropEffect = 'move';
-                  if (dragOver !== sq) setDragOver(sq);
-                }}
-                onDragLeave={(e) => {
-                  // Only clear when leaving the square itself, not a child element
-                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                    setDragOver(prev => (prev === sq ? null : prev));
-                  }
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  if (dragSource && dragSource !== sq) {
-                    onMovePiece(dragSource as Square, sq);
-                  }
-                  setDragSource(null);
-                  setDragOver(null);
-                }}
-                onDragEnd={() => {
-                  // Drag cancelled (no drop target) — deselect via click on source
-                  if (dragSource) onSquareClick(dragSource as Square);
-                  setDragSource(null);
-                  setDragOver(null);
-                }}
+                onPointerDown={(e) => handlePointerDown(e, sq)}
                 style={{
                   background: bg,
                   position: 'relative',
-                  cursor: isDraggable
-                    ? isDragSource ? 'grabbing' : 'grab'
+                  cursor: dragState
+                    ? 'grabbing'
+                    : isDraggable
+                    ? 'grab'
                     : interactive && isLegalMove
                     ? 'pointer'
                     : 'default',
@@ -148,7 +177,7 @@ export default function Board({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  opacity: isDragSource ? 0.45 : 1,
+                  opacity: isDragSource ? 0.35 : 1,
                   transition: 'opacity 0.1s',
                 }}
               >
@@ -168,7 +197,7 @@ export default function Board({
                 )}
 
                 {/* Drag-over highlight */}
-                {isDragOver && dragSource && dragSource !== sq && (
+                {isDragOver && dragState && dragState.sq !== sq && (
                   <div style={{ position: 'absolute', inset: 0, background: 'rgba(20,85,30,0.45)', pointerEvents: 'none' }} />
                 )}
 
@@ -207,6 +236,25 @@ export default function Board({
           })
         )}
       </div>
+
+      {/* Floating piece following cursor during drag */}
+      {dragState && squareSize > 0 && (
+        <div
+          style={{
+            position: 'fixed',
+            left: dragState.x - squareSize * 0.5,
+            top: dragState.y - squareSize * 0.5,
+            width: squareSize,
+            height: squareSize,
+            pointerEvents: 'none',
+            zIndex: 1000,
+            opacity: 0.9,
+            filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))',
+          }}
+        >
+          <Piece type={dragState.pieceType} color={dragState.pieceColor} />
+        </div>
+      )}
     </div>
   );
 }
