@@ -4,12 +4,14 @@ import type React from 'react';
 interface Props {
   phase: string;
   drawOfferState: string;
+  username: string;
   onResign: () => void;
   onOfferDraw: () => void;
   onNewGame: () => void;
+  onResetDb: () => void;
 }
 
-export default function Controls({ phase, drawOfferState, onResign, onOfferDraw, onNewGame }: Props) {
+export default function Controls({ phase, drawOfferState, username, onResign, onOfferDraw, onNewGame, onResetDb }: Props) {
   const isPlaying = phase === 'playing' || phase === 'thinking';
   const canAct = phase === 'playing';
 
@@ -37,6 +39,24 @@ export default function Controls({ phase, drawOfferState, onResign, onOfferDraw,
         height: 36,
       }}
     >
+      {username === 'Kamil Admin' && (
+        <button
+          onClick={onResetDb}
+          style={{
+            ...btnBase,
+            background: 'transparent',
+            color: '#EF4444',
+            border: '1px solid #EF4444',
+            opacity: 0.6,
+            marginRight: 'auto',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = '1'; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = '0.6'; }}
+          title="Delete all game history"
+        >
+          Reset DB
+        </button>
+      )}
       {isPlaying && (
         <>
           <button

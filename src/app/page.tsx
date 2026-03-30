@@ -198,9 +198,18 @@ export default function Home() {
           <Controls
             phase={state.phase}
             drawOfferState={state.drawOfferState}
+            username={username}
             onResign={game.resign}
             onOfferDraw={handleDrawOffer}
             onNewGame={game.newGame}
+            onResetDb={() => {
+              if (!confirm('Delete all game history? This cannot be undone.')) return;
+              fetch('/api/admin/reset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username }),
+              }).catch(() => {});
+            }}
           />
         </div>
 
