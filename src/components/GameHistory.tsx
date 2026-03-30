@@ -28,12 +28,18 @@ function resultLabel(record: GameRecord): { text: string; color: string } {
   return { text: 'Loss', color: '#f87171' };
 }
 
-export default function GameHistory() {
+interface Props {
+  refreshKey?: number;
+}
+
+export default function GameHistory({ refreshKey = 0 }: Props) {
   const [games, setGames] = useState<GameRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     fetch('/api/games')
       .then(r => r.json())
       .then(data => {
@@ -42,7 +48,7 @@ export default function GameHistory() {
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [refreshKey]);
 
   return (
     <div

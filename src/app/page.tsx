@@ -21,6 +21,7 @@ export default function Home() {
   const [evalScore, setEvalScore] = useState<number | null>(null);
   const evalFenRef = useRef<string | null>(null);
   const [username, setUsername] = useState('');
+  const [historyKey, setHistoryKey] = useState(0);
 
   // Trigger computer move when it's the engine's turn
   useEffect(() => {
@@ -69,9 +70,12 @@ export default function Home() {
         moveCount: state.history.length,
         username: username || null,
       }),
-    }).catch(() => {
-      // Non-critical — silently ignore save failures
-    });
+    })
+      .then(() => setHistoryKey(k => k + 1))
+      .catch(() => {
+        // Non-critical — still refresh so any pre-existing games show
+        setHistoryKey(k => k + 1);
+      });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase]);
 
@@ -207,7 +211,7 @@ export default function Home() {
         {/* Side panel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minWidth: 0 }}>
           <MoveHistory history={state.history} playerColor={playerColorSafe} />
-          <GameHistory />
+          <GameHistory refreshKey={historyKey} />
         </div>
       </div>
 
