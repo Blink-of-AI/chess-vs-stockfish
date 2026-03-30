@@ -1,13 +1,38 @@
 'use client';
+import { useEffect, useState } from 'react';
 import type { Color } from '@/types';
 
 interface Props {
-  onSelect: (color: Color) => void;
+  onSelect: (color: Color, username: string) => void;
   stockfishReady: boolean;
   stockfishError?: string | null;
 }
 
 export default function ColorSelector({ onSelect, stockfishReady, stockfishError }: Props) {
+  const [username, setUsername] = useState('');
+  const [inputFocused, setInputFocused] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/username')
+      .then(r => r.json())
+      .then(data => {
+        if (data.username) setUsername(data.username);
+      })
+      .catch(() => {});
+  }, []);
+
+  function handleSelect(color: Color) {
+    const name = username.trim();
+    if (name) {
+      fetch('/api/username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: name }),
+      }).catch(() => {});
+    }
+    onSelect(color, name);
+  }
+
   return (
     <div
       style={{
@@ -99,9 +124,46 @@ export default function ColorSelector({ onSelect, stockfishReady, stockfishError
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 20,
+            gap: 24,
           }}
         >
+          {/* Username input */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <label
+              style={{
+                color: 'var(--text-muted)',
+                fontSize: '0.75rem',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+              }}
+            >
+              Your name
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
+              placeholder="Anonymous"
+              maxLength={50}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                borderBottom: `2px solid ${inputFocused ? 'var(--accent)' : 'var(--text-muted)'}`,
+                color: 'var(--text)',
+                fontSize: '1rem',
+                fontWeight: 600,
+                padding: '4px 2px',
+                width: 180,
+                textAlign: 'center',
+                outline: 'none',
+                transition: 'border-color 0.2s',
+                fontFamily: 'inherit',
+              }}
+            />
+          </div>
+
           <p
             style={{
               color: 'var(--text-muted)',
@@ -116,7 +178,7 @@ export default function ColorSelector({ onSelect, stockfishReady, stockfishError
           <div style={{ display: 'flex', gap: 12 }}>
             {/* White button */}
             <button
-              onClick={() => onSelect('w')}
+              onClick={() => handleSelect('w')}
               style={{
                 padding: '14px 28px',
                 background: 'var(--board-light)',
@@ -148,7 +210,7 @@ export default function ColorSelector({ onSelect, stockfishReady, stockfishError
 
             {/* Black button */}
             <button
-              onClick={() => onSelect('b')}
+              onClick={() => handleSelect('b')}
               style={{
                 padding: '14px 28px',
                 background: 'var(--board-dark)',

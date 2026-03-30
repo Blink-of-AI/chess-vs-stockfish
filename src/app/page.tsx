@@ -20,6 +20,7 @@ export default function Home() {
   const savedGameRef = useRef<string | null>(null);
   const [evalScore, setEvalScore] = useState<number | null>(null);
   const evalFenRef = useRef<string | null>(null);
+  const [username, setUsername] = useState('');
 
   // Trigger computer move when it's the engine's turn
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function Home() {
         endReason: state.result.reason,
         moves: state.history.map(m => m.san).join(' '),
         moveCount: state.history.length,
+        username: username || null,
       }),
     }).catch(() => {
       // Non-critical — silently ignore save failures
@@ -92,7 +94,7 @@ export default function Home() {
   }, [state.fen, state.playerColor, game, evaluatePosition]);
 
   if (state.phase === 'color-selection') {
-    return <ColorSelector onSelect={game.startGame} stockfishReady={ready} stockfishError={stockfishError} />;
+    return <ColorSelector onSelect={(color, name) => { setUsername(name); game.startGame(color); }} stockfishReady={ready} stockfishError={stockfishError} />;
   }
 
   const isPlayerTurn = state.phase === 'playing' && state.turn === state.playerColor;
@@ -187,7 +189,7 @@ export default function Home() {
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
               }}>
-                You ({state.playerColor === 'w' ? 'White' : 'Black'})
+                {username || 'You'} ({state.playerColor === 'w' ? 'White' : 'Black'})
               </span>
             </div>
             <CapturedPieces pieces={capturedByPlayer} color={playerColorSafe} />
