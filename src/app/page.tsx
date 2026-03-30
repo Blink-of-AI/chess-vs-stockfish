@@ -41,8 +41,11 @@ export default function Home() {
     if (!isActive || !ready || !state.playerColor) return;
     if (evalFenRef.current === state.fen) return;
     evalFenRef.current = state.fen;
+    const turn = state.turn;
     evaluatePosition(state.fen, (score) => {
-      setEvalScore(score);
+      // Stockfish reports score from the side-to-move perspective.
+      // Normalize to white's perspective for the EvalBar.
+      setEvalScore(turn === 'b' ? -score : score);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.fen, state.phase, ready]);
@@ -107,9 +110,8 @@ export default function Home() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
         minHeight: '100vh',
-        padding: '16px',
+        padding: '32px 16px',
         gap: '16px',
       }}
     >
@@ -125,7 +127,7 @@ export default function Home() {
         {/* Board column */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           {/* Opponent info */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: 'clamp(280px, 56vmin, 560px)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: 'clamp(280px, 56vmin, 560px)', height: 28, overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{
                 fontSize: '0.75rem',
@@ -134,7 +136,7 @@ export default function Home() {
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
               }}>
-                Stockfish 16
+                AI
               </span>
               {state.phase === 'thinking' && (
                 <span style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
@@ -176,7 +178,7 @@ export default function Home() {
           </div>
 
           {/* Player info */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: 'clamp(280px, 56vmin, 560px)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: 'clamp(280px, 56vmin, 560px)', height: 28, overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{
                 fontSize: '0.75rem',

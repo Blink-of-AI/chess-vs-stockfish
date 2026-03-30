@@ -30,23 +30,23 @@ export default function StatusBar({ state }: Props) {
       message = `You win! — ${reason}`;
       textColor = '#22C55E';
     } else {
-      message = `Stockfish wins — ${reason}`;
+      message = `AI wins — ${reason}`;
       textColor = '#EF4444';
     }
   } else if (drawOfferState === 'pending') {
     message = 'Evaluating draw offer…';
     showPulse = true;
   } else if (drawOfferState === 'declined') {
-    message = 'Stockfish declines the draw';
+    message = 'AI declines the draw';
     textColor = '#EF4444';
   } else if (phase === 'thinking') {
-    message = 'Stockfish is thinking…';
+    message = 'AI is thinking…';
     showPulse = true;
   } else if (inCheck) {
     message = 'Check!';
     textColor = '#EF4444';
   } else if (phase === 'playing') {
-    message = turn === playerColor ? 'Your turn' : "Stockfish's turn";
+    message = turn === playerColor ? 'Your turn' : "AI's turn";
     textColor = turn === playerColor ? 'var(--text)' : 'var(--text-muted)';
   } else if (phase === 'promotion') {
     message = 'Choose promotion piece';

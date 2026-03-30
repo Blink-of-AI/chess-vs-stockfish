@@ -9,8 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Chess vs Stockfish',
-  description: 'Play chess against the Stockfish engine',
+  title: 'Chess vs AI',
+  description: 'Play chess against AI',
+  icons: { icon: '/favicon.svg' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
