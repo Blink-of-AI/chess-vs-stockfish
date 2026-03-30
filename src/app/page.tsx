@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { useChessGame } from '@/hooks/useChessGame';
 import { useStockfish } from '@/hooks/useStockfish';
 import Board from '@/components/Board';
@@ -17,6 +17,7 @@ export default function Home() {
   const { ready, error: stockfishError, getBestMove, evaluatePosition } = useStockfish();
   const { state } = game;
   const savedGameRef = useRef<string | null>(null);
+  const [username, setUsername] = useState('');
 
   // Trigger computer move when it's the engine's turn
   useEffect(() => {
@@ -69,7 +70,13 @@ export default function Home() {
   }, [state.fen, state.playerColor, game, evaluatePosition]);
 
   if (state.phase === 'color-selection') {
-    return <ColorSelector onSelect={game.startGame} stockfishReady={ready} stockfishError={stockfishError} />;
+    return (
+      <ColorSelector
+        onSelect={(color, name) => { setUsername(name); game.startGame(color); }}
+        stockfishReady={ready}
+        stockfishError={stockfishError}
+      />
+    );
   }
 
   const isPlayerTurn = state.phase === 'playing' && state.turn === state.playerColor;
@@ -162,7 +169,7 @@ export default function Home() {
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
               }}>
-                You ({state.playerColor === 'w' ? 'White' : 'Black'})
+                {username || 'You'} ({state.playerColor === 'w' ? 'White' : 'Black'})
               </span>
             </div>
             <CapturedPieces pieces={capturedByPlayer} color={playerColorSafe} />

@@ -1,13 +1,54 @@
 'use client';
+import { useEffect, useRef, useState } from 'react';
 import type { Color } from '@/types';
 
 interface Props {
-  onSelect: (color: Color) => void;
+  onSelect: (color: Color, username: string) => void;
   stockfishReady: boolean;
   stockfishError?: string | null;
 }
 
 export default function ColorSelector({ onSelect, stockfishReady, stockfishError }: Props) {
+  const [username, setUsername] = useState('');
+  const [loadingUser, setLoadingUser] = useState(true);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetch('/api/username')
+      .then(r => r.json())
+      .then(data => { if (data.username) setUsername(data.username); })
+      .catch(() => {})
+      .finally(() => setLoadingUser(false));
+  }, []);
+
+  function handleSelect(color: Color) {
+    const trimmed = username.trim();
+    // Save username in the background (fire-and-forget)
+    if (trimmed) {
+      fetch('/api/username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: trimmed }),
+      }).catch(() => {});
+    }
+    onSelect(color, trimmed);
+  }
+
+  const inputStyle: React.CSSProperties = {
+    background: 'transparent',
+    border: 'none',
+    borderBottom: '2px solid var(--text-muted)',
+    outline: 'none',
+    color: 'var(--text)',
+    fontSize: '1rem',
+    fontWeight: 600,
+    textAlign: 'center',
+    width: 200,
+    padding: '4px 0',
+    letterSpacing: '0.03em',
+    transition: 'border-color 0.2s',
+  };
+
   return (
     <div
       style={{
@@ -41,7 +82,7 @@ export default function ColorSelector({ onSelect, stockfishReady, stockfishError
             textTransform: 'uppercase',
           }}
         >
-          vs Stockfish 16
+          vs AI
         </p>
       </div>
 
@@ -58,7 +99,7 @@ export default function ColorSelector({ onSelect, stockfishReady, stockfishError
           boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
         }}
       >
-        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(i => (
+        {[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(i => (
           <div
             key={i}
             style={{
@@ -69,6 +110,32 @@ export default function ColorSelector({ onSelect, stockfishReady, stockfishError
             }}
           />
         ))}
+      </div>
+
+      {/* Username input */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+        <label
+          style={{
+            color: 'var(--text-muted)',
+            fontSize: '0.7rem',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Your name
+        </label>
+        <input
+          ref={inputRef}
+          type="text"
+          value={username}
+          onChange={e => setUsername(e.target.value)}
+          onFocus={e => { e.currentTarget.style.borderBottomColor = 'var(--accent)'; }}
+          onBlur={e => { e.currentTarget.style.borderBottomColor = 'var(--text-muted)'; }}
+          placeholder={loadingUser ? '…' : 'Enter your name'}
+          maxLength={50}
+          style={inputStyle}
+          autoComplete="off"
+        />
       </div>
 
       {!stockfishReady ? (
@@ -89,19 +156,12 @@ export default function ColorSelector({ onSelect, stockfishReady, stockfishError
                   animation: 'pulse 1.5s infinite',
                 }}
               />
-              Loading Stockfish engine…
+              Loading AI engine…
             </div>
           )}
         </div>
       ) : (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 20,
-          }}
-        >
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
           <p
             style={{
               color: 'var(--text-muted)',
@@ -116,7 +176,7 @@ export default function ColorSelector({ onSelect, stockfishReady, stockfishError
           <div style={{ display: 'flex', gap: 12 }}>
             {/* White button */}
             <button
-              onClick={() => onSelect('w')}
+              onClick={() => handleSelect('w')}
               style={{
                 padding: '14px 28px',
                 background: 'var(--board-light)',
@@ -148,7 +208,7 @@ export default function ColorSelector({ onSelect, stockfishReady, stockfishError
 
             {/* Black button */}
             <button
-              onClick={() => onSelect('b')}
+              onClick={() => handleSelect('b')}
               style={{
                 padding: '14px 28px',
                 background: '#1A1208',

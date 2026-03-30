@@ -20,3 +20,31 @@ export async function initSchema() {
     )
   `;
 }
+
+export async function initUsersSchema() {
+  const sql = getDb();
+  await sql`
+    CREATE TABLE IF NOT EXISTS users (
+      ip          VARCHAR(64) PRIMARY KEY,
+      username    VARCHAR(50) NOT NULL,
+      updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+}
+
+export async function getUserByIp(ip: string): Promise<string | null> {
+  await initUsersSchema();
+  const sql = getDb();
+  const rows = await sql`SELECT username FROM users WHERE ip = ${ip}`;
+  return (rows[0]?.username as string) ?? null;
+}
+
+export async function upsertUser(ip: string, username: string): Promise<void> {
+  await initUsersSchema();
+  const sql = getDb();
+  await sql`
+    INSERT INTO users (ip, username, updated_at)
+    VALUES (${ip}, ${username}, NOW())
+    ON CONFLICT (ip) DO UPDATE SET username = ${username}, updated_at = NOW()
+  `;
+}
