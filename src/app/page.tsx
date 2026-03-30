@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { useChessGame } from '@/hooks/useChessGame';
 import { useStockfish } from '@/hooks/useStockfish';
 import Board from '@/components/Board';
@@ -10,6 +10,7 @@ import PromotionModal from '@/components/PromotionModal';
 import StatusBar from '@/components/StatusBar';
 import CapturedPieces from '@/components/CapturedPieces';
 import GameHistory from '@/components/GameHistory';
+import EvalBar from '@/components/EvalBar';
 import type { Color } from '@/types';
 
 export default function Home() {
@@ -17,6 +18,8 @@ export default function Home() {
   const { ready, error: stockfishError, getBestMove, evaluatePosition } = useStockfish();
   const { state } = game;
   const savedGameRef = useRef<string | null>(null);
+  const [evalScore, setEvalScore] = useState<number | null>(null);
+  const evalFenRef = useRef<string | null>(null);
 
   // Trigger computer move when it's the engine's turn
   useEffect(() => {
@@ -26,6 +29,23 @@ export default function Home() {
     }, 1500);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, state.fen, ready]);
+
+  // Evaluate position when Stockfish is idle (player's turn or game over)
+  useEffect(() => {
+    if (state.phase === 'color-selection') {
+      setEvalScore(null);
+      evalFenRef.current = null;
+      return;
+    }
+    const isActive = state.phase === 'playing' || state.phase === 'game-over';
+    if (!isActive || !ready || !state.playerColor) return;
+    if (evalFenRef.current === state.fen) return;
+    evalFenRef.current = state.fen;
+    evaluatePosition(state.fen, (score) => {
+      setEvalScore(score);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.fen, state.phase, ready]);
 
   // Save completed game to NeonDB
   useEffect(() => {
@@ -139,18 +159,21 @@ export default function Home() {
 
           <StatusBar state={state} />
 
-          <Board
-            fen={state.fen}
-            selectedSquare={state.selectedSquare}
-            legalMoves={state.legalMoves}
-            lastMove={state.lastMove}
-            inCheck={state.inCheck}
-            playerColor={playerColorSafe}
-            flipped={flipped}
-            interactive={isPlayerTurn}
-            onSquareClick={game.selectSquare}
-            onMovePiece={game.movePiece}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <EvalBar score={evalScore} flipped={flipped} />
+            <Board
+              fen={state.fen}
+              selectedSquare={state.selectedSquare}
+              legalMoves={state.legalMoves}
+              lastMove={state.lastMove}
+              inCheck={state.inCheck}
+              playerColor={playerColorSafe}
+              flipped={flipped}
+              interactive={isPlayerTurn}
+              onSquareClick={game.selectSquare}
+              onMovePiece={game.movePiece}
+            />
+          </div>
 
           {/* Player info */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: 'clamp(280px, 56vmin, 560px)' }}>
