@@ -33,17 +33,14 @@ export default function EvalBar({ score, flipped }: EvalBarProps) {
   const topColor = flipped ? '#F0D9B5' : '#1a1a1a';
   const bottomColor = flipped ? '#1a1a1a' : '#F0D9B5';
 
-  // Determine which side is winning and by how much
-  const whiteWinning = (score ?? 0) > 0;
-  const equal = score === null || score === 0;
   const value = score === null ? null : formatValue(score);
+  // Player is winning when: white player + white ahead, OR black player + black ahead
+  const playerWinning = flipped ? (score ?? 0) < 0 : (score ?? 0) > 0;
+  const playerLabel = value === null ? null : `${playerWinning ? '+' : '-'}${value}`;
 
-  // Top segment is winning when: flipped+whiteWinning OR !flipped+!whiteWinning
-  const topIsWinning = flipped ? whiteWinning : !whiteWinning;
-
-  // Only show a label if the segment is tall enough to fit it
-  const TOP_MIN = 12;
-  const BOT_MIN = 12;
+  // Player's segment: bottom when playing white, top when playing black
+  const playerSegmentPercent = flipped ? topPercent : bottomPercent;
+  const MIN_FOR_LABEL = 12;
 
   return (
     <div
@@ -70,7 +67,7 @@ export default function EvalBar({ score, flipped }: EvalBarProps) {
           minHeight: 0,
         }}
       >
-        {value !== null && topPercent >= TOP_MIN && (
+        {flipped && playerLabel && playerSegmentPercent >= MIN_FOR_LABEL && (
           <span
             style={{
               position: 'absolute',
@@ -84,7 +81,7 @@ export default function EvalBar({ score, flipped }: EvalBarProps) {
               letterSpacing: '-0.02em',
             }}
           >
-            {equal ? '=' : topIsWinning ? `+${value}` : `-${value}`}
+            {playerLabel}
           </span>
         )}
       </div>
@@ -99,7 +96,7 @@ export default function EvalBar({ score, flipped }: EvalBarProps) {
           minHeight: 0,
         }}
       >
-        {value !== null && bottomPercent >= BOT_MIN && (
+        {!flipped && playerLabel && playerSegmentPercent >= MIN_FOR_LABEL && (
           <span
             style={{
               position: 'absolute',
@@ -113,7 +110,7 @@ export default function EvalBar({ score, flipped }: EvalBarProps) {
               letterSpacing: '-0.02em',
             }}
           >
-            {equal ? '=' : topIsWinning ? `-${value}` : `+${value}`}
+            {playerLabel}
           </span>
         )}
       </div>
