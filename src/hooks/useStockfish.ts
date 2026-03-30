@@ -13,6 +13,7 @@ export function useStockfish() {
   // response from the engine is discarded rather than misrouted.
   const discardNextBestMove = useRef(false);
   const recoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skillLevelRef = useRef(14); // Advanced by default
 
   function clearRecovery() {
     if (recoveryTimerRef.current !== null) {
@@ -55,7 +56,7 @@ export function useStockfish() {
       if (!line) return;
 
       if (line === 'uciok') {
-        worker.postMessage('setoption name Skill Level value 15');
+        worker.postMessage(`setoption name Skill Level value ${skillLevelRef.current}`);
         worker.postMessage('isready');
       }
 
@@ -130,6 +131,7 @@ export function useStockfish() {
       stopCurrent(w);
       modeRef.current = 'bestmove';
       onBestMoveRef.current = cb;
+      w.postMessage(`setoption name Skill Level value ${skillLevelRef.current}`);
       w.postMessage(`position fen ${fen}`);
       w.postMessage(`go movetime ${movetime}`);
 
@@ -159,5 +161,11 @@ export function useStockfish() {
     [ready]
   );
 
-  return { ready, error, getBestMove, evaluatePosition };
+  const setSkillLevel = useCallback((level: number) => {
+    skillLevelRef.current = level;
+    const w = workerRef.current;
+    if (w) w.postMessage(`setoption name Skill Level value ${level}`);
+  }, []);
+
+  return { ready, error, getBestMove, evaluatePosition, setSkillLevel };
 }

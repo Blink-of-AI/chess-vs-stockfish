@@ -11,15 +11,18 @@ import StatusBar from '@/components/StatusBar';
 import CapturedPieces from '@/components/CapturedPieces';
 import GameHistory from '@/components/GameHistory';
 import EvalBar from '@/components/EvalBar';
+import DifficultySelector, { DIFFICULTY_LEVELS, type DifficultyLevel } from '@/components/DifficultySelector';
 import type { Color } from '@/types';
 
 export default function Home() {
   const game = useChessGame();
-  const { ready, error: stockfishError, getBestMove, evaluatePosition } = useStockfish();
+  const { ready, error: stockfishError, getBestMove, evaluatePosition, setSkillLevel } = useStockfish();
   const { state } = game;
   const savedGameRef = useRef<string | null>(null);
   const [evalScore, setEvalScore] = useState<number | null>(null);
   const evalFenRef = useRef<string | null>(null);
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>(DIFFICULTY_LEVELS[3]); // Advanced
+  const difficultyRef = useRef(DIFFICULTY_LEVELS[3]);
   const [username, setUsername] = useState('');
   const [historyKey, setHistoryKey] = useState(0);
 
@@ -28,7 +31,7 @@ export default function Home() {
     if (state.phase !== 'thinking' || !ready || !state.playerColor) return;
     getBestMove(state.fen, (move) => {
       game.makeComputerMove(move);
-    }, 1500);
+    }, difficultyRef.current.movetime);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, state.fen, ready]);
 
@@ -219,6 +222,14 @@ export default function Home() {
 
         {/* Side panel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minWidth: 0 }}>
+          <DifficultySelector
+            value={difficulty}
+            onChange={(level) => {
+              difficultyRef.current = level;
+              setDifficulty(level);
+              setSkillLevel(level.skill);
+            }}
+          />
           <MoveHistory history={state.history} playerColor={playerColorSafe} />
           <GameHistory refreshKey={historyKey} />
         </div>
