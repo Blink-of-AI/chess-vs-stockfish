@@ -50,6 +50,8 @@ export default function GameHistory() {
         borderRadius: 6,
         padding: '14px 16px',
         minWidth: 0,
+        height: 220,
+        overflowY: 'auto',
       }}
     >
       <h2
