@@ -41,7 +41,7 @@ export default function ColorSelector({ onSelect, stockfishReady, stockfishError
             textTransform: 'uppercase',
           }}
         >
-          vs Stockfish 16
+          vs AI
         </p>
       </div>
 
@@ -89,7 +89,7 @@ export default function ColorSelector({ onSelect, stockfishReady, stockfishError
                   animation: 'pulse 1.5s infinite',
                 }}
               />
-              Loading Stockfish engine…
+              Loading AI engine…
             </div>
           )}
         </div>

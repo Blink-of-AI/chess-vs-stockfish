@@ -133,7 +133,7 @@ export default function Home() {
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
               }}>
-                Stockfish 16
+                AI
               </span>
               {state.phase === 'thinking' && (
                 <span style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
