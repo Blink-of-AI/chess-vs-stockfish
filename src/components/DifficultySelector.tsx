@@ -27,24 +27,22 @@ export default function DifficultySelector({ value, onChange }: Props) {
       style={{
         background: 'var(--surface)',
         borderRadius: 6,
-        padding: '10px 16px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
+        padding: '14px 16px',
+        border: '1px solid var(--surface-2)',
       }}
     >
-      <span
+      <p
         style={{
-          fontSize: '0.7rem',
-          fontWeight: 700,
           color: 'var(--text-muted)',
-          letterSpacing: '0.1em',
+          fontSize: '0.68rem',
+          letterSpacing: '0.12em',
           textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
+          fontWeight: 700,
+          marginBottom: 10,
         }}
       >
         Difficulty
-      </span>
+      </p>
       <select
         value={value.id}
         onChange={e => {
@@ -52,12 +50,12 @@ export default function DifficultySelector({ value, onChange }: Props) {
           if (level) onChange(level);
         }}
         style={{
-          flex: 1,
+          width: '100%',
           background: 'var(--surface-2)',
           color: 'var(--text)',
           border: 'none',
           borderRadius: 3,
-          padding: '6px 8px',
+          padding: '7px 10px',
           fontSize: '0.82rem',
           fontWeight: 600,
           cursor: 'pointer',
