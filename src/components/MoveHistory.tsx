@@ -30,7 +30,7 @@ export default function MoveHistory({ history, playerColor }: Props) {
         background: 'var(--surface)',
         borderRadius: 6,
         padding: 16,
-        maxHeight: 'clamp(200px, 56vmin, 560px)',
+        height: 'clamp(200px, 40vmin, 400px)',
         overflowY: 'auto',
         border: '1px solid var(--surface-2)',
       }}

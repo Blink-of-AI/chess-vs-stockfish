@@ -107,9 +107,8 @@ export default function Home() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
         minHeight: '100vh',
-        padding: '16px',
+        padding: '32px 16px',
         gap: '16px',
       }}
     >
