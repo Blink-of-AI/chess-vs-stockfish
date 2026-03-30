@@ -98,10 +98,16 @@ export default function Board({
                   e.dataTransfer.effectAllowed = 'move';
                   // Use a transparent 1x1 pixel as the drag image so the piece
                   // stays visible at its original position during drag.
+                  // Element must be in the DOM on macOS or the browser falls back
+                  // to a default globe/file icon as the drag ghost.
                   const ghost = document.createElement('canvas');
                   ghost.width = 1;
                   ghost.height = 1;
+                  ghost.style.position = 'fixed';
+                  ghost.style.top = '-100px';
+                  document.body.appendChild(ghost);
                   e.dataTransfer.setDragImage(ghost, 0, 0);
+                  setTimeout(() => document.body.removeChild(ghost), 0);
                   setDragSource(sq);
                   onSquareClick(sq); // select piece to show legal move dots
                 }}
