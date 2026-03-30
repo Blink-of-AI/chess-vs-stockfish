@@ -8,6 +8,7 @@ interface GameRecord {
   result: string;
   end_reason: string;
   move_count: number;
+  username: string | null;
 }
 
 const REASON_LABEL: Record<string, string> = {
@@ -116,14 +117,15 @@ export default function GameHistory() {
                       {g.player_color === 'w' ? 'White' : 'Black'} · {g.move_count} moves
                     </span>
                   </div>
-                  <div
-                    style={{
-                      color: 'var(--text-muted)',
-                      fontSize: '0.7rem',
-                      marginTop: 1,
-                    }}
-                  >
-                    {REASON_LABEL[g.end_reason] ?? g.end_reason}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 1 }}>
+                    {g.username && (
+                      <span style={{ color: 'var(--text)', fontSize: '0.7rem', fontWeight: 600 }}>
+                        {g.username}
+                      </span>
+                    )}
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>
+                      {REASON_LABEL[g.end_reason] ?? g.end_reason}
+                    </span>
                   </div>
                 </div>
                 <span
