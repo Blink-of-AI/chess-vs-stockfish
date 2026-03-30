@@ -125,7 +125,7 @@ export default function Home() {
         {/* Board column */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           {/* Opponent info */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: 'clamp(280px, 56vmin, 560px)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: 'clamp(280px, 56vmin, 560px)', height: 28, overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{
                 fontSize: '0.75rem',
@@ -176,7 +176,7 @@ export default function Home() {
           </div>
 
           {/* Player info */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: 'clamp(280px, 56vmin, 560px)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: 'clamp(280px, 56vmin, 560px)', height: 28, overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{
                 fontSize: '0.75rem',

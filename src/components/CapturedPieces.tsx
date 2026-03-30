@@ -21,16 +21,16 @@ interface Props {
 export default function CapturedPieces({ pieces, color }: Props) {
   const sorted = sortPieces(pieces);
 
-  if (sorted.length === 0) return <div style={{ height: 20 }} />;
-
   return (
     <div
       style={{
         display: 'flex',
-        flexWrap: 'wrap',
+        flexWrap: 'nowrap',
         gap: 1,
         alignItems: 'center',
+        overflow: 'hidden',
         maxWidth: 200,
+        height: 20,
       }}
     >
       {sorted.map((p, i) => (

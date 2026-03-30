@@ -32,7 +32,9 @@ export default function Controls({ phase, drawOfferState, onResign, onOfferDraw,
         gap: 8,
         minWidth: 'clamp(280px, 56vmin, 560px)',
         justifyContent: 'flex-end',
+        alignItems: 'center',
         marginTop: 4,
+        height: 36,
       }}
     >
       {isPlaying && (
