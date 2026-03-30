@@ -41,8 +41,11 @@ export default function Home() {
     if (!isActive || !ready || !state.playerColor) return;
     if (evalFenRef.current === state.fen) return;
     evalFenRef.current = state.fen;
+    const turn = state.turn;
     evaluatePosition(state.fen, (score) => {
-      setEvalScore(score);
+      // Stockfish reports score from the side-to-move perspective.
+      // Normalize to white's perspective for the EvalBar.
+      setEvalScore(turn === 'b' ? -score : score);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.fen, state.phase, ready]);
