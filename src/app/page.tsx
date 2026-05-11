@@ -16,7 +16,7 @@ import type { Color } from '@/types';
 
 export default function Home() {
   const game = useChessGame();
-  const { ready, error: stockfishError, getBestMove, evaluatePosition, setSkillLevel } = useStockfish();
+  const { ready, error: stockfishError, getBestMove, evaluatePosition, setDifficulty: applyEngineDifficulty } = useStockfish();
   const { state } = game;
   const savedGameRef = useRef<string | null>(null);
   const [evalScore, setEvalScore] = useState<number | null>(null);
@@ -31,7 +31,7 @@ export default function Home() {
     if (state.phase !== 'thinking' || !ready || !state.playerColor) return;
     getBestMove(state.fen, (move) => {
       game.makeComputerMove(move);
-    }, difficultyRef.current.movetime);
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, state.fen, ready]);
 
@@ -227,7 +227,7 @@ export default function Home() {
             onChange={(level) => {
               difficultyRef.current = level;
               setDifficulty(level);
-              setSkillLevel(level.skill);
+              applyEngineDifficulty(level);
             }}
           />
           <MoveHistory history={state.history} playerColor={playerColorSafe} />

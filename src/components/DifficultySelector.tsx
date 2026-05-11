@@ -6,14 +6,17 @@ export interface DifficultyLevel {
   elo: number;
   skill: number;
   movetime: number;
+  depth: number | null;       // if set, use `go depth` instead of `go movetime`
+  limitStrength: boolean;     // enable UCI_LimitStrength (ELO-based play)
+  uciElo: number | null;      // UCI_Elo target (min ~1320 for Stockfish)
 }
 
 export const DIFFICULTY_LEVELS: DifficultyLevel[] = [
-  { id: 1, name: 'Novice',       elo: 500,  skill: 0,  movetime: 200  },
-  { id: 2, name: 'Beginner',     elo: 1000, skill: 4,  movetime: 500  },
-  { id: 3, name: 'Intermediate', elo: 1500, skill: 8,  movetime: 1000 },
-  { id: 4, name: 'Advanced',     elo: 2000, skill: 14, movetime: 1500 },
-  { id: 5, name: 'Master',       elo: 3200, skill: 20, movetime: 3000 },
+  { id: 1, name: 'Novice',       elo: 500,  skill: 0,  movetime: 50,   depth: 1,    limitStrength: false, uciElo: null },
+  { id: 2, name: 'Beginner',     elo: 1000, skill: 3,  movetime: 300,  depth: null, limitStrength: true,  uciElo: 1320 },
+  { id: 3, name: 'Intermediate', elo: 1500, skill: 8,  movetime: 1000, depth: null, limitStrength: true,  uciElo: 1500 },
+  { id: 4, name: 'Advanced',     elo: 2000, skill: 14, movetime: 2000, depth: null, limitStrength: true,  uciElo: 2000 },
+  { id: 5, name: 'Master',       elo: 3200, skill: 20, movetime: 3000, depth: null, limitStrength: false, uciElo: null },
 ];
 
 interface Props {

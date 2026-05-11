@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { DIFFICULTY_LEVELS, type DifficultyLevel } from '@/components/DifficultySelector';
 
 export function useStockfish() {
   const workerRef = useRef<Worker | null>(null);
@@ -13,7 +14,17 @@ export function useStockfish() {
   // response from the engine is discarded rather than misrouted.
   const discardNextBestMove = useRef(false);
   const recoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const skillLevelRef = useRef(14); // Advanced by default
+  const difficultyRef = useRef<DifficultyLevel>(DIFFICULTY_LEVELS[3]); // Advanced by default
+
+  function applyDifficulty(w: Worker, level: DifficultyLevel) {
+    if (level.limitStrength && level.uciElo !== null) {
+      w.postMessage('setoption name UCI_LimitStrength value true');
+      w.postMessage(`setoption name UCI_Elo value ${level.uciElo}`);
+    } else {
+      w.postMessage('setoption name UCI_LimitStrength value false');
+      w.postMessage(`setoption name Skill Level value ${level.skill}`);
+    }
+  }
 
   function clearRecovery() {
     if (recoveryTimerRef.current !== null) {
@@ -56,7 +67,7 @@ export function useStockfish() {
       if (!line) return;
 
       if (line === 'uciok') {
-        worker.postMessage(`setoption name Skill Level value ${skillLevelRef.current}`);
+        applyDifficulty(worker, difficultyRef.current);
         worker.postMessage('isready');
       }
 
@@ -125,25 +136,30 @@ export function useStockfish() {
   }, []);
 
   const getBestMove = useCallback(
-    (fen: string, cb: (move: string) => void, movetime = 1500) => {
+    (fen: string, cb: (move: string) => void) => {
       const w = workerRef.current;
       if (!w || !ready) return;
       stopCurrent(w);
       modeRef.current = 'bestmove';
       onBestMoveRef.current = cb;
-      w.postMessage(`setoption name Skill Level value ${skillLevelRef.current}`);
+      const level = difficultyRef.current;
+      applyDifficulty(w, level);
       w.postMessage(`position fen ${fen}`);
-      w.postMessage(`go movetime ${movetime}`);
+      if (level.depth !== null) {
+        w.postMessage(`go depth ${level.depth}`);
+      } else {
+        w.postMessage(`go movetime ${level.movetime}`);
+      }
 
-      // Safety net: if no bestmove arrives within movetime + 5 s, send stop
-      // to force the engine to respond and unblock the game.
+      // Safety net: if no bestmove arrives in time, send stop to unblock the game.
+      const recoveryMs = level.depth !== null ? 5000 : level.movetime + 5000;
       recoveryTimerRef.current = setTimeout(() => {
         if (modeRef.current === 'bestmove') {
           console.warn('Stockfish recovery: no bestmove received, sending stop');
-          discardNextBestMove.current = false; // we want the next bestmove
+          discardNextBestMove.current = false;
           w.postMessage('stop');
         }
-      }, movetime + 5000);
+      }, recoveryMs);
     },
     [ready]
   );
@@ -161,11 +177,11 @@ export function useStockfish() {
     [ready]
   );
 
-  const setSkillLevel = useCallback((level: number) => {
-    skillLevelRef.current = level;
+  const setDifficulty = useCallback((level: DifficultyLevel) => {
+    difficultyRef.current = level;
     const w = workerRef.current;
-    if (w) w.postMessage(`setoption name Skill Level value ${level}`);
+    if (w) applyDifficulty(w, level);
   }, []);
 
-  return { ready, error, getBestMove, evaluatePosition, setSkillLevel };
+  return { ready, error, getBestMove, evaluatePosition, setDifficulty };
 }
