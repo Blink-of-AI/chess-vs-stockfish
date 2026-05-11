@@ -37,3 +37,5 @@ next-env.d.ts
 
 # stockfish (generated at build time)
 /public/stockfish.js
+
+.vercel
